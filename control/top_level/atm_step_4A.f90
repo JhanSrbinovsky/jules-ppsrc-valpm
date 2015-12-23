@@ -491,7 +491,7 @@ USE nlstcall_mod, ONLY : ldump, &
                          ltimer
 
 
-use cable_data_mod, only : cable_atm_step
+use cable_data_mod, only : cable_atm_step, cable_cycle
 USE chsunits_mod, ONLY : nunits
 
 USE science_fixes_mod, ONLY : l_use_old_mass_fix
@@ -3215,6 +3215,7 @@ REAL,POINTER,SAVE :: cosp_crain_3d(:,:,:)
 REAL,POINTER,SAVE :: cosp_csnow_3d(:,:,:)
 
 INTEGER :: lbc_size_new
+!INTEGER :: ic,jc,lp,mc
 
 TYPE (array_dims) twoddims
 TYPE (array_dims) twoddims_no_halo
@@ -6466,6 +6467,7 @@ IF (l_physics .AND. errorstatus == 0) THEN
     END IF
  !CABLE: fudge - this is set in atm_step_phys_init BUt this is called after
    dim_cs2 = LAND_FIELD
+   land_pts_trif = land_field
    CALL cable_atm_step( mype, & 
             .TRUE., &   ! UM_atm_step=
             .TRUE., & ! fudge L_cable switch, 
@@ -6474,7 +6476,7 @@ IF (l_physics .AND. errorstatus == 0) THEN
             row_length,     &
             rows, &
             LAND_FIELD, ntiles, sm_levels, dim_cs1, dim_cs2,              &
-            true_LATITUDE, true_LONGITUDE,          &
+            acos(cos_theta_LATITUDE), acos(cos_theta_LONGITUDE),          &
             land_index, &
             clapp_horn, & ! bexp, &
             therm_cond, & !hcon, &
@@ -8109,6 +8111,8 @@ cycleno=0
 outerloop : DO WHILE  (cycleno < numcycles)
 
 cycleno=cycleno+1
+
+call cable_cycle(cycleno,numcycles)
 
 IF(total_conv_outer .AND. exner_res < 2.d-3) cycleno = numcycles
 
